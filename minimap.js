@@ -92,6 +92,7 @@ function drawDot(ctx, x, y, color, scale) {
     ctx.fill();
 }
 
+const imageCache = new Map();
 // Function to render the graph onto the mini-graph canvas
 function renderMiniGraph(graph, miniGraphCanvas) {
     const rootStyles = getComputedStyle(document.documentElement);
@@ -172,6 +173,55 @@ function renderMiniGraph(graph, miniGraphCanvas) {
         }
 
         ctx.fillRect(x, y, width, height);
+
+        if (node.imgs) {
+            node.imgs.forEach(nodeImg => {
+                const lastWidget = node.widgets.at(-1);
+                const imgSrc = nodeImg.src;
+
+                // Check if the image is already in the cache
+                let img = imageCache.get(imgSrc);
+
+                if (!img) {
+                    // If the image is not in the cache, create a new Image object and cache it
+                    img = new Image();
+                    img.src = imgSrc;
+
+                    // Cache the image after it's loaded
+                    img.onload = function() {
+                        imageCache.set(imgSrc, img);
+                        drawImage(img);
+                    };
+                } else {
+                    // If the image is already cached, draw it immediately
+                    drawImage(img);
+                }
+
+                function drawImage(img) {
+                    // Adjust the image size to fit inside the rectangle
+                    let imgHeight, imgWidth;
+                    const widgetPadding = 30;
+
+                    const ratio = nodeImg.width / nodeImg.height;
+                    imgHeight = height - ((lastWidget.last_y + widgetPadding + heightPadding) * scale);
+                    imgWidth = imgHeight * ratio;
+
+                    let yOffset = height - imgHeight;
+                    if (imgWidth > width) {
+                        const availableSpace = height - (lastWidget.last_y * scale) + widgetPadding;
+
+                        imgWidth = width;
+                        imgHeight = imgWidth / ratio;
+                        yOffset = lastWidget.last_y * scale + (availableSpace - imgHeight) / 2;
+                    }
+
+                    const imgX = x + (width - imgWidth) / 2; // Center the image horizontally
+                    const imgY = y + yOffset; // Center image between last widget and bottom
+
+                    ctx.drawImage(img, imgX, imgY, imgWidth, imgHeight);
+                }
+            });
+        }
 
         if (node.id == currentExecutingNode) {
             ctx.strokeStyle = 'green';
