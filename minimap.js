@@ -1,8 +1,21 @@
 import { api } from '../../scripts/api.js';
+import { app } from '../../scripts/app.js';
 
 console.log("Graph Mirroring Script Loaded");
 const nodeTitleHeight = 30;
 let currentExecutingNode = "0";
+let drawImages = false;
+let fps = 1000 / 30;
+
+window.addEventListener('minimap.reloadSettings', async () => {
+    drawImages = app.ui.settings.getSettingValue('minimap.Image') || false;
+    fps = refreshRateToMilliseconds(app.ui.settings.getSettingValue('minimap.RefreshRate') || 30);
+});
+
+function refreshRateToMilliseconds(refreshRate) {
+    if (refreshRate <= 0) throw new Error("Refresh rate must be a positive number.");
+    return 1000 / refreshRate;
+}
 
 // Function to create and inject the mini-graph canvas into the DOM
 function createMiniGraphCanvas(settings) {
@@ -174,7 +187,7 @@ function renderMiniGraph(graph, miniGraphCanvas) {
 
         ctx.fillRect(x, y, width, height);
 
-        if (node.imgs) {
+        if (node.imgs && drawImages) {
             node.imgs.forEach(nodeImg => {
                 const lastWidget = node.widgets.at(-1);
                 const imgSrc = nodeImg.src;
@@ -370,7 +383,7 @@ function initializeMiniGraph(settings) {
 
     // Update the mini-graph immediately and then on every frame
     updateMiniGraph();
-    setInterval(updateMiniGraph, 100); // Adjust the interval as needed
+    setInterval(updateMiniGraph, fps); // Adjust the interval as needed
 }
 
 // Ensure the app and graph are ready before initializing the mini-graph

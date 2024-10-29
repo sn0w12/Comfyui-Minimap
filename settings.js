@@ -40,6 +40,25 @@ const settingsDefinitions = [
         type: 'combo',
         onChange: () => reloadSettings(),
     },
+    {
+        id: 'minimap.Image',
+        category: ['Minimap', 'Visuals', 'Image'],
+        name: 'Draw Images',
+        experimental: true,
+        defaultValue: false,
+        type: 'boolean',
+        tooltip: 'Only draws images that are in view.',
+        onChange: () => reloadSettings(),
+    },
+    {
+        id: 'minimap.RefreshRate',
+        category: ['Minimap', 'Visuals', 'Refresh Rate'],
+        name: 'Refresh Rate',
+        defaultValue: 30,
+        type: 'number',
+        tooltip: 'Requires a refresh to take effect.',
+        onChange: () => reloadSettings(),
+    }
 ]
 
 function registerSetting(settingDefinition) {
