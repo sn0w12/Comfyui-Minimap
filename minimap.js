@@ -100,7 +100,7 @@ function getLinkPosition(originNode, targetNode, bounds, link, scale) {
 
 function drawDot(ctx, x, y, color, scale) {
     ctx.beginPath();
-    ctx.arc(x, y, 3 * scale, 0, Math.PI * 2);
+    ctx.arc(x, y, 4 * scale, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
 }
@@ -354,6 +354,15 @@ function initializeMiniGraph(settings) {
         renderMiniGraph(window.app.graph, miniGraphCanvas);
     }
 
+    let offsetCache = [0, 0];
+    function requestMiniGraphUpdate() {
+        if (window.app.canvas.ds.offset[0] == offsetCache[0] && window.app.canvas.ds.offset[1] == offsetCache[1]) {
+            return; // Skip update if the offset hasn't changed
+        }
+        offsetCache = [...window.app.canvas.ds.offset];
+        updateMiniGraph();
+    }
+
     // Handle mouse down event
     miniGraphCanvas.addEventListener('mousedown', function(event) {
         if (event.ctrlKey) {
@@ -383,7 +392,27 @@ function initializeMiniGraph(settings) {
 
     // Update the mini-graph immediately and then on every frame
     updateMiniGraph();
-    setInterval(updateMiniGraph, fps); // Adjust the interval as needed
+
+    api.addEventListener("graphChanged", (e) => {
+        updateMiniGraph();
+    });
+
+    api.addEventListener("executing", (e) => {
+        const nodeId = e.detail;
+        currentExecutingNode = nodeId != null ? nodeId : 0;
+        updateMiniGraph();
+    });
+
+    // Draw canvases on resize
+    const resizeObserver = new ResizeObserver(() => {
+        updateMiniGraph();
+    });
+
+    setInterval(requestMiniGraphUpdate, fps);
+
+    // Observe the miniGraphDiv for size changes
+    const miniGraphDiv = document.getElementById('minimap');
+    resizeObserver.observe(miniGraphDiv);
 }
 
 // Ensure the app and graph are ready before initializing the mini-graph
@@ -400,15 +429,6 @@ function waitForAppAndGraph() {
                 height: 140,
                 opacity: 1
             };
-
-            api.addEventListener("executing", (e) => {
-                const nodeId = e.detail;
-                if (nodeId != null) {
-                    currentExecutingNode = nodeId;
-                    return;
-                }
-                currentExecutingNode = 0;
-            });
 
             // Initialize settings when graph is added.
             const event = new CustomEvent('minimap.reloadSettings');
