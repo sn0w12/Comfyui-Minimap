@@ -389,30 +389,6 @@ function initializeMiniGraph(settings) {
     let animationFrameId = null;
     let lastRenderTime = 0;
     let isUpdatePending = false;
-    let offsetCache = [0, 0];
-    let lastGraphNodeCount = 0;
-    let lastZoom = 0;
-    let forceUpdate = false;
-
-    function hasGraphChanged() {
-        const currentNodeCount = window.app.graph._nodes.length;
-        const currentZoom = window.app.canvas.ds.scale;
-        const offsetChanged =
-            window.app.canvas.ds.offset[0] !== offsetCache[0] ||
-            window.app.canvas.ds.offset[1] !== offsetCache[1];
-
-        if (
-            currentNodeCount !== lastGraphNodeCount ||
-            currentZoom !== lastZoom ||
-            offsetChanged
-        ) {
-            lastGraphNodeCount = currentNodeCount;
-            lastZoom = currentZoom;
-            offsetCache = [...window.app.canvas.ds.offset];
-            return true;
-        }
-        return false;
-    }
 
     function renderLoop(timestamp) {
         animationFrameId = requestAnimationFrame(renderLoop);
@@ -422,20 +398,9 @@ function initializeMiniGraph(settings) {
             return;
         }
 
-        // Only render if something has changed
-        if (
-            !forceUpdate &&
-            !isDragging &&
-            !isUpdatePending &&
-            !hasGraphChanged()
-        ) {
-            return;
-        }
-
         renderMiniGraph(window.app.graph, miniGraphCanvas);
         lastRenderTime = timestamp;
         isUpdatePending = false;
-        forceUpdate = false;
     }
 
     function requestUpdate() {
@@ -468,7 +433,6 @@ function initializeMiniGraph(settings) {
     api.addEventListener("executing", (e) => {
         const nodeId = e.detail;
         currentExecutingNode = nodeId != null ? nodeId : 0;
-        forceUpdate = true;
         requestUpdate();
     });
 
