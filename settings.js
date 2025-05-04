@@ -31,7 +31,6 @@ const settingsDefinitions = [
         defaultValue: 'none',
         options: [
             { text: 'None', value: 'none' },
-            { text: 'Relative', value: 'relative' },
             { text: 'Top Right', value: 'topright' },
             { text: 'Top Left', value: 'topleft' },
             { text: 'Bottom Right', value: 'bottomright' },
